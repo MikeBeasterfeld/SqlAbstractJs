@@ -3,8 +3,9 @@ export class SqlAbstract {
         const columns = args && Array.isArray(args.columns) && args.columns.length > 0 ? args.columns.join(",") : "*";
         const table = args && args.table ? args.table : "MYTABLE";
         const where = args && Array.isArray(args.where) && args.where.length > 0 ? " WHERE " + args.where.join(" ") : "";
+        const orderBy = args && Array.isArray(args.orderBy) && args.orderBy.length > 0 ? " ORDER BY " + args.orderBy.join(" ") : "";
         
-        return `SELECT ${columns} FROM ${table}${where}`;
+        return `SELECT ${columns} FROM ${table}${where}${orderBy}`;
     }
 }
 

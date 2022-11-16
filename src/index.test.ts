@@ -17,4 +17,8 @@ describe("generate SQL", () =>  {
     it("should create a select statment with a where clause", () => {
         expect(sqlabstract.generateSQL({ where: ["foo", ">", "bar"]})).toEqual("SELECT * FROM MYTABLE WHERE foo > bar");
     });
+
+    it("should create a select statement with a order by clause", () => {
+        expect(sqlabstract.generateSQL({ orderBy: [ "foo", "ASC" ]})).toEqual("SELECT * FROM MYTABLE ORDER BY foo ASC");        
+    });
 });
