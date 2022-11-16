@@ -1,11 +1,18 @@
 export class SqlAbstract {
-    generateSQL(args?: Record<string, string[] | string>): string {
-        const columns = args && Array.isArray(args.columns) && args.columns.length > 0 ? args.columns.join(",") : "*";
-        const table = args && args.table ? args.table : "MYTABLE";
-        const where = args && Array.isArray(args.where) && args.where.length > 0 ? " WHERE " + args.where.join(" ") : "";
-        const orderBy = args && Array.isArray(args.orderBy) && args.orderBy.length > 0 ? " ORDER BY " + args.orderBy.join(" ") : "";
+    generateSQL(args?: GenerateSQLArgs): string {
+        const columns = args?.columns?.length ? args.columns.join(",") : "*";
+        const table = args?.table ? args.table : "MYTABLE";
+        const where = args?.where?.length ? " WHERE " + args.where.join(" ") : "";
+        const orderBy = args?.orderBy?.length ? " ORDER BY " + args.orderBy.join(" ") : "";
         
         return `SELECT ${columns} FROM ${table}${where}${orderBy}`;
     }
 }
+
+type GenerateSQLArgs = {
+    columns?: string[],
+    table?: string,
+    where?: string[],
+    orderBy?: string[]
+;}
 
