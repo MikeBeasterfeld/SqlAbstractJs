@@ -27,6 +27,10 @@ export class SqlAbstract {
             return `UPDATE ${table} SET ${sets.join(",")}${where}`;
         }
 
+        if (args?.statementType == "delete") {
+            return `DELETE FROM ${table}${where}`;
+        }
+
         return `SELECT ${columns} FROM ${table}${where}${orderBy}`;
     }
 }

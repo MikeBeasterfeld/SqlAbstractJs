@@ -37,3 +37,9 @@ describe("generate update SQL", () => {
     });
 });
 
+describe("generate delete SQL", () => {
+    const sqlabstract = new SqlAbstract;
+    it("should create a simple delete statement", () => {
+        expect(sqlabstract.generateSQL({ statementType: "delete", where: ["foo", ">", "bar"]})).toEqual("DELETE FROM MYTABLE WHERE foo > bar");
+    });
+});
