@@ -25,7 +25,15 @@ describe("generate select SQL", () =>  {
 
 describe("generate insert SQL", () =>  {
     const sqlabstract = new SqlAbstract;
-    it("should create a simple insert statment", () => {
+    it("should create a simple insert statement", () => {
         expect(sqlabstract.generateSQL({ statementType: "insert", columns: ["columnFoo"], values: ["foo"]})).toEqual("INSERT INTO MYTABLE (columnFoo) VALUES ('foo')");
     });
 });
+
+describe("generate update SQL", () => {
+    const sqlabstract = new SqlAbstract;
+    it("should create a simple update statement", () => {
+        expect(sqlabstract.generateSQL({ statementType: "update", columns: ["columnFoo"], values: ["foo"], where: ["foo", ">", "bar"]})).toEqual("UPDATE MYTABLE SET columnFoo = 'foo' WHERE foo > bar");
+    });
+});
+

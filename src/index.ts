@@ -5,9 +5,26 @@ export class SqlAbstract {
         const where = args?.where?.length ? " WHERE " + args.where.join(" ") : "";
         const orderBy = args?.orderBy?.length ? " ORDER BY " + args.orderBy.join(" ") : "";
         const values = args?.values?.length ? args.values.map(value => `'${value}'`).join(",") : "";
+        const setValues = args?.columns?.length ? args.columns.map((column, i) => {
+            if(args?.values && args.values[i]) {
+                console.log("column", column);
+                console.log("value", args.values[i]);
+                return [column, args.values[i]];
+            }
+        }) : [];
 
         if (args?.statementType == "insert") {
             return `INSERT INTO ${table} (${columns}) VALUES (${values})`;
+        }
+
+        if (args?.statementType == "update") {
+            const sets = setValues.map((set) => {
+                if(set) {
+                    return `${set[0]} = '${set[1]}'`;
+                }
+            });
+
+            return `UPDATE ${table} SET ${sets.join(",")}${where}`;
         }
 
         return `SELECT ${columns} FROM ${table}${where}${orderBy}`;
@@ -15,7 +32,7 @@ export class SqlAbstract {
 }
 
 type GenerateSQLArgs = {
-    statementType?: "select" | "insert",
+    statementType?: "select" | "insert" | "update" | "delete",
     columns?: string[],
     values?: string[],
     table?: string,
