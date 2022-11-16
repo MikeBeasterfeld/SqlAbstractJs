@@ -1,6 +1,6 @@
 import { SqlAbstract } from ".";
 
-describe("generate SQL", () =>  {
+describe("generate select SQL", () =>  {
     const sqlabstract = new SqlAbstract;
     it("should create a simple select statment", () => {
         expect(sqlabstract.generateSQL()).toEqual("SELECT * FROM MYTABLE");
@@ -20,5 +20,12 @@ describe("generate SQL", () =>  {
 
     it("should create a select statement with a order by clause", () => {
         expect(sqlabstract.generateSQL({ orderBy: [ "foo", "ASC" ]})).toEqual("SELECT * FROM MYTABLE ORDER BY foo ASC");        
+    });
+});
+
+describe("generate insert SQL", () =>  {
+    const sqlabstract = new SqlAbstract;
+    it("should create a simple insert statment", () => {
+        expect(sqlabstract.generateSQL({ statementType: "insert", columns: ["columnFoo"], values: ["foo"]})).toEqual("INSERT INTO MYTABLE (columnFoo) VALUES ('foo')");
     });
 });
