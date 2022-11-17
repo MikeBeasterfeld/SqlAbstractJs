@@ -12,6 +12,7 @@ export class SqlAbstract {
                 return [column, args.values[i]];
             }
         }) : [];
+        const join = args?.join ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${table}.${args.join.baseTableColumn} = ${args.join.table}.${args.join.column}` : "";
 
         if (args?.statementType == "insert") {
             return `INSERT INTO ${table} (${columns}) VALUES (${values})`;
@@ -31,7 +32,7 @@ export class SqlAbstract {
             return `DELETE FROM ${table}${where}`;
         }
 
-        return `SELECT ${columns} FROM ${table}${where}${orderBy}`;
+        return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
     }
 }
 
@@ -41,6 +42,12 @@ type GenerateSQLArgs = {
     values?: string[],
     table?: string,
     where?: string[],
-    orderBy?: string[]
+    orderBy?: string[],
+    join?: {
+        type: "inner",
+        table: string,
+        column: string,
+        baseTableColumn: string
+    }
 ;}
 

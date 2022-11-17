@@ -21,6 +21,10 @@ describe("generate select SQL", () =>  {
     it("should create a select statement with a order by clause", () => {
         expect(sqlabstract.generateSQL({ orderBy: [ "foo", "ASC" ]})).toEqual("SELECT * FROM MYTABLE ORDER BY foo ASC");        
     });
+
+    it("should create a select with a join", () => {
+        expect(sqlabstract.generateSQL({ join: { type: "inner", table: "MYTABLE2", column: "mytable_id", baseTableColumn: "id" }})).toEqual("SELECT * FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id");
+    });
 });
 
 describe("generate insert SQL", () =>  {
@@ -43,3 +47,4 @@ describe("generate delete SQL", () => {
         expect(sqlabstract.generateSQL({ statementType: "delete", where: ["foo", ">", "bar"]})).toEqual("DELETE FROM MYTABLE WHERE foo > bar");
     });
 });
+
