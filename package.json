@@ -1,6 +1,7 @@
 {
   "scripts": {
     "test": "jest",
+    "test-coverage": "jest --coverage",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
   },
   "devDependencies": {
