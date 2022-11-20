@@ -20,6 +20,12 @@ describe("generate select SQL", () => {
 
   it("should create a select statment with a where clause", () => {
     expect(sqlabstract.generateSQL({ where: ["foo", ">", "bar"] })).toEqual(
+      "SELECT * FROM MYTABLE WHERE foo > \"bar\""
+    );
+  });
+
+  it("should create a select statment with a where clause comparing two columns", () => {
+    expect(sqlabstract.generateSQL({ where: ["foo", ">", { col: "bar" }] })).toEqual(
       "SELECT * FROM MYTABLE WHERE foo > bar"
     );
   });
@@ -69,7 +75,7 @@ describe("generate update SQL", () => {
         values: ["foo"],
         where: ["foo", ">", "bar"],
       })
-    ).toEqual("UPDATE MYTABLE SET columnFoo = 'foo' WHERE foo > bar");
+    ).toEqual("UPDATE MYTABLE SET columnFoo = 'foo' WHERE foo > \"bar\"");
   });
 });
 
@@ -81,6 +87,6 @@ describe("generate delete SQL", () => {
         statementType: "delete",
         where: ["foo", ">", "bar"],
       })
-    ).toEqual("DELETE FROM MYTABLE WHERE foo > bar");
+    ).toEqual("DELETE FROM MYTABLE WHERE foo > \"bar\"");
   });
 });

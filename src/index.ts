@@ -1,8 +1,17 @@
 export class SqlAbstract {
+
+  static whereThirdArg(arg: string | { col: string } | undefined): string {
+    if (typeof arg === "object") {
+      return arg.col;
+    }
+
+    return `"${arg}"`;
+  }
+
   generateSQL(args?: GenerateSQLArgs): string {
     const columns = args?.columns?.length ? args.columns.join(",") : "*";
     const table = args?.table ? args.table : "MYTABLE";
-    const where = args?.where?.length ? " WHERE " + args.where.join(" ") : "";
+    const where = args?.where?.length === 3 ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${SqlAbstract.whereThirdArg(args.where.shift())}` : "";
     const orderBy = args?.orderBy?.length
       ? " ORDER BY " + args.orderBy.join(" ")
       : "";
@@ -51,7 +60,7 @@ type GenerateSQLArgs = {
   columns?: string[];
   values?: string[];
   table?: string;
-  where?: string[];
+  where?: (string | { col: string })[];
   orderBy?: string[];
   join?: {
     type: "inner";
