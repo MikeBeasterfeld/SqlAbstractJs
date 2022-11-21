@@ -8,9 +8,23 @@ export class SqlAbstract {
     return `"${arg}"`;
   }
 
+  static whereColumns(columns: string[] | undefined, table: string): string {
+    if (columns) {
+      return columns.map((col) => {
+        if (col.split(".").length < 2) {
+          return `${table}.${col}`;
+        }
+
+        return col;
+      }).join(", ");
+    }
+
+    return "";
+  }
+
   generateSQL(args?: GenerateSQLArgs): string {
-    const columns = args?.columns?.length ? args.columns.join(",") : "*";
     const table = args?.table ? args.table : "MYTABLE";
+    const columns = args?.columns?.length ? SqlAbstract.whereColumns(args.columns, table) : "*";
     const where = args?.where?.length === 3 ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${SqlAbstract.whereThirdArg(args.where.shift())}` : "";
     const orderBy = args?.orderBy?.length
       ? " ORDER BY " + args.orderBy.join(" ")

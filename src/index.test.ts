@@ -8,7 +8,7 @@ describe("generate select SQL", () => {
 
   it("should create a select statment with specific columns", () => {
     expect(sqlabstract.generateSQL({ columns: ["foo"] })).toEqual(
-      "SELECT foo FROM MYTABLE"
+      "SELECT MYTABLE.foo FROM MYTABLE"
     );
   });
 
@@ -50,6 +50,22 @@ describe("generate select SQL", () => {
       "SELECT * FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id"
     );
   });
+
+  it("should create a select with a join with limited select columns", () => {
+    expect(
+      sqlabstract.generateSQL({
+        columns: ["foo", "MYTABLE2.bar"],
+        join: {
+          type: "inner",
+          table: "MYTABLE2",
+          column: "mytable_id",
+          baseTableColumn: "id",
+        },
+      })
+    ).toEqual(
+      "SELECT MYTABLE.foo, MYTABLE2.bar FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id"
+    );
+  });
 });
 
 describe("generate insert SQL", () => {
@@ -61,7 +77,7 @@ describe("generate insert SQL", () => {
         columns: ["columnFoo"],
         values: ["foo"],
       })
-    ).toEqual("INSERT INTO MYTABLE (columnFoo) VALUES ('foo')");
+    ).toEqual("INSERT INTO MYTABLE (MYTABLE.columnFoo) VALUES ('foo')");
   });
 });
 
