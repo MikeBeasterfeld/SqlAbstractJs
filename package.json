@@ -1,4 +1,8 @@
 {
+  "name": "sqlabstractjs",
+  "version": "0.0.1",
+  "author": "Mike Beasterfeld <mike.beasterfeld@gmail.com> (https://github.com/MikeBeasterfeld)",
+  "private": true,
   "scripts": {
     "test": "jest",
     "test-coverage": "jest --coverage",
