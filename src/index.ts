@@ -1,76 +1,84 @@
-export class SqlAbstract {
-
-  static whereThirdArg(arg: string | { col: string } | undefined): string {
-    if (typeof arg === "object") {
-      return arg.col;
-    }
-
-    return `"${arg}"`;
+function whereThirdArg(arg: string | { col: string } | undefined): string {
+  if (typeof arg === "object") {
+    return arg.col;
   }
 
-  static whereColumns(columns: string[] | undefined, table: string): string {
-    if (columns) {
-      return columns.map((col) => {
+  return `"${arg}"`;
+}
+
+function whereColumns(columns: string[] | undefined, table: string): string {
+  if (columns) {
+    return columns
+      .map((col) => {
         if (col.split(".").length < 2) {
           return `${table}.${col}`;
         }
 
         return col;
-      }).join(", ");
-    }
-
-    return "";
+      })
+      .join(", ");
   }
 
-  generateSQL(args?: GenerateSQLArgs): string {
-    const table = args?.table ? args.table : "MYTABLE";
-    const columns = args?.columns?.length ? SqlAbstract.whereColumns(args.columns, table) : "*";
-    const where = args?.where?.length === 3 ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${SqlAbstract.whereThirdArg(args.where.shift())}` : "";
-    const orderBy = args?.orderBy?.length
-      ? " ORDER BY " + args.orderBy.join(" ")
-      : "";
-    const values = args?.values?.length
-      ? args.values.map((value) => `'${value}'`).join(",")
-      : "";
-    const setValues = args?.columns?.length
-      ? args.columns.map((column, i) => {
-          if (args?.values && args.values[i]) {
-            console.log("column", column);
-            console.log("value", args.values[i]);
-            return [column, args.values[i]];
-          }
-        })
-      : [];
-    const join = args?.join
-      ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${table}.${
-          args.join.baseTableColumn
-        } = ${args.join.table}.${args.join.column}`
-      : "";
+  return "";
+}
 
-    if (args?.statementType == "insert") {
-      return `INSERT INTO ${table} (${columns}) VALUES (${values})`;
-    }
-
-    if (args?.statementType == "update") {
-      const sets = setValues.map((set) => {
-        if (set) {
-          return `${set[0]} = '${set[1]}'`;
+export function generateSQL(args?: GenerateSQLArgs): string {
+  const table = args?.table ? args.table : "MYTABLE";
+  const columns = args?.columns?.length
+    ? whereColumns(args.columns, table)
+    : "*";
+  const where =
+    args?.where?.length === 3
+      ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(
+          args.where.shift()
+        )}`
+      : "";
+  const orderBy = args?.orderBy?.length
+    ? " ORDER BY " + args.orderBy.join(" ")
+    : "";
+  const values = args?.values?.length
+    ? args.values.map((value) => `'${value}'`).join(",")
+    : "";
+  const setValues = args?.columns?.length
+    ? args.columns.map((column, i) => {
+        if (args?.values && args.values[i]) {
+          console.log("column", column);
+          console.log("value", args.values[i]);
+          return [column, args.values[i]];
         }
-      });
+      })
+    : [];
+  const join = args?.join
+    ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${table}.${
+        args.join.baseTableColumn
+      } = ${args.join.table}.${args.join.column}`
+    : "";
 
-      return `UPDATE ${table} SET ${sets.join(",")}${where}`;
-    }
-
-    if (args?.statementType == "delete") {
-      return `DELETE FROM ${table}${where}`;
-    }
-
-    if (args?.statementType == "create table") {
-      return `CREATE TABLE ${table} (${args.createColumns?.map((element) => element.join(" ")).join(", ")})`;
-    }
-
-    return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
+  if (args?.statementType == "insert") {
+    return `INSERT INTO ${table} (${columns}) VALUES (${values})`;
   }
+
+  if (args?.statementType == "update") {
+    const sets = setValues.map((set) => {
+      if (set) {
+        return `${set[0]} = '${set[1]}'`;
+      }
+    });
+
+    return `UPDATE ${table} SET ${sets.join(",")}${where}`;
+  }
+
+  if (args?.statementType == "delete") {
+    return `DELETE FROM ${table}${where}`;
+  }
+
+  if (args?.statementType == "create table") {
+    return `CREATE TABLE ${table} (${args.createColumns
+      ?.map((element) => element.join(" "))
+      .join(", ")})`;
+  }
+
+  return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
 }
 
 type GenerateSQLArgs = {

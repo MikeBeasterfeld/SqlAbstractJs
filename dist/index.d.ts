@@ -1,10 +1,4 @@
-export declare class SqlAbstract {
-    static whereThirdArg(arg: string | {
-        col: string;
-    } | undefined): string;
-    static whereColumns(columns: string[] | undefined, table: string): string;
-    generateSQL(args?: GenerateSQLArgs): string;
-}
+export declare function generateSQL(args?: GenerateSQLArgs): string;
 type GenerateSQLArgs = {
     statementType?: "select" | "insert" | "update" | "delete" | "create table";
     columns?: string[];
