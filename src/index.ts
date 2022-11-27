@@ -6,7 +6,7 @@ function whereThirdArg(arg: string | { col: string } | undefined): string {
   return `"${arg}"`;
 }
 
-function whereColumns(columns: string[] | undefined, table: string): string {
+function selectColumns(columns: string[] | undefined, table: string): string {
   if (columns) {
     return columns
       .map((col) => {
@@ -19,13 +19,49 @@ function whereColumns(columns: string[] | undefined, table: string): string {
       .join(", ");
   }
 
-  return "";
+  return "*";
 }
 
-export function generateSQL(args?: GenerateSQLArgs): string {
+export function select(args: SelectArgs): string {
+  const columns = selectColumns(args.columns, args.table);
+
+  const join = args?.join
+    ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${
+        args.table
+      }.${args.join.baseTableColumn} = ${args.join.table}.${args.join.column}`
+    : "";
+
+  const where =
+    args?.where?.length === 3
+      ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(
+          args.where.shift()
+        )}`
+      : "";
+
+  const orderBy = args?.orderBy?.length
+    ? " ORDER BY " + args.orderBy.join(" ")
+    : "";
+
+  return `SELECT ${columns} FROM ${args.table}${join}${where}${orderBy}`;
+}
+
+type SelectArgs = {
+  table: string;
+  columns?: string[];
+  where?: (string | { col: string })[];
+  orderBy?: string[];
+  join?: {
+    type: "inner";
+    table: string;
+    column: string;
+    baseTableColumn: string;
+  };
+};
+
+export function generateSQL(args: GenerateSQLArgs): string {
   const table = args?.table ? args.table : "MYTABLE";
   const columns = args?.columns?.length
-    ? whereColumns(args.columns, table)
+    ? selectColumns(args.columns, table)
     : "*";
   const where =
     args?.where?.length === 3
@@ -82,7 +118,7 @@ export function generateSQL(args?: GenerateSQLArgs): string {
 }
 
 type GenerateSQLArgs = {
-  statementType?: "select" | "insert" | "update" | "delete" | "create table";
+  statementType?: "insert" | "update" | "delete" | "create table";
   columns?: string[];
   createColumns?: string[][];
   values?: string[];

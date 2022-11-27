@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateSQL = void 0;
+exports.generateSQL = exports.select = void 0;
 function whereThirdArg(arg) {
     if (typeof arg === "object") {
         return arg.col;
     }
     return `"${arg}"`;
 }
-function whereColumns(columns, table) {
+function selectColumns(columns, table) {
     if (columns) {
         return columns
             .map((col) => {
@@ -18,13 +18,28 @@ function whereColumns(columns, table) {
         })
             .join(", ");
     }
-    return "";
+    return "*";
 }
+function select(args) {
+    var _a, _b;
+    const columns = selectColumns(args.columns, args.table);
+    const join = (args === null || args === void 0 ? void 0 : args.join)
+        ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${args.table}.${args.join.baseTableColumn} = ${args.join.table}.${args.join.column}`
+        : "";
+    const where = ((_a = args === null || args === void 0 ? void 0 : args.where) === null || _a === void 0 ? void 0 : _a.length) === 3
+        ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(args.where.shift())}`
+        : "";
+    const orderBy = ((_b = args === null || args === void 0 ? void 0 : args.orderBy) === null || _b === void 0 ? void 0 : _b.length)
+        ? " ORDER BY " + args.orderBy.join(" ")
+        : "";
+    return `SELECT ${columns} FROM ${args.table}${join}${where}${orderBy}`;
+}
+exports.select = select;
 function generateSQL(args) {
     var _a, _b, _c, _d, _e, _f;
     const table = (args === null || args === void 0 ? void 0 : args.table) ? args.table : "MYTABLE";
     const columns = ((_a = args === null || args === void 0 ? void 0 : args.columns) === null || _a === void 0 ? void 0 : _a.length)
-        ? whereColumns(args.columns, table)
+        ? selectColumns(args.columns, table)
         : "*";
     const where = ((_b = args === null || args === void 0 ? void 0 : args.where) === null || _b === void 0 ? void 0 : _b.length) === 3
         ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(args.where.shift())}`

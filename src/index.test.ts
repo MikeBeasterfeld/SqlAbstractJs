@@ -1,43 +1,42 @@
-import { generateSQL } from "./index";
+import { generateSQL, select } from "./index";
 
 describe("generate select SQL", () => {
   it("should create a simple select statment", () => {
-    expect(generateSQL()).toEqual("SELECT * FROM MYTABLE");
+    expect(select({ table: "MYTABLE" })).toEqual("SELECT * FROM MYTABLE");
   });
 
   it("should create a select statment with specific columns", () => {
-    expect(generateSQL({ columns: ["foo"] })).toEqual(
+    expect(select({ table: "MYTABLE", columns: ["foo"] })).toEqual(
       "SELECT MYTABLE.foo FROM MYTABLE"
     );
   });
 
   it("should create a select statement for any table", () => {
-    expect(generateSQL({ table: "bar" })).toEqual(
-      "SELECT * FROM bar"
-    );
+    expect(select({ table: "bar" })).toEqual("SELECT * FROM bar");
   });
 
   it("should create a select statment with a where clause", () => {
-    expect(generateSQL({ where: ["foo", ">", "bar"] })).toEqual(
-      "SELECT * FROM MYTABLE WHERE foo > \"bar\""
+    expect(select({ table: "MYTABLE", where: ["foo", ">", "bar"] })).toEqual(
+      'SELECT * FROM MYTABLE WHERE foo > "bar"'
     );
   });
 
   it("should create a select statment with a where clause comparing two columns", () => {
     expect(
-      generateSQL({ where: ["foo", ">", { col: "bar" }] })
+      select({ table: "MYTABLE", where: ["foo", ">", { col: "bar" }] })
     ).toEqual("SELECT * FROM MYTABLE WHERE foo > bar");
   });
 
   it("should create a select statement with a order by clause", () => {
-    expect(generateSQL({ orderBy: ["foo", "ASC"] })).toEqual(
+    expect(select({ table: "MYTABLE", orderBy: ["foo", "ASC"] })).toEqual(
       "SELECT * FROM MYTABLE ORDER BY foo ASC"
     );
   });
 
   it("should create a select with a join", () => {
     expect(
-      generateSQL({
+      select({
+        table: "MYTABLE",
         join: {
           type: "inner",
           table: "MYTABLE2",
@@ -52,7 +51,8 @@ describe("generate select SQL", () => {
 
   it("should create a select with a join with limited select columns", () => {
     expect(
-      generateSQL({
+      select({
+        table: "MYTABLE",
         columns: ["foo", "MYTABLE2.bar"],
         join: {
           type: "inner",
@@ -99,7 +99,7 @@ describe("generate delete SQL", () => {
         statementType: "delete",
         where: ["foo", ">", "bar"],
       })
-    ).toEqual("DELETE FROM MYTABLE WHERE foo > \"bar\"");
+    ).toEqual('DELETE FROM MYTABLE WHERE foo > "bar"');
   });
 });
 
@@ -114,5 +114,3 @@ describe("generate table creation SQL", () => {
     ).toEqual("CREATE TABLE test_table (note TEXT)");
   });
 });
-
-
