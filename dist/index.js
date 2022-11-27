@@ -20,7 +20,7 @@ class SqlAbstract {
         return "";
     }
     generateSQL(args) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const table = (args === null || args === void 0 ? void 0 : args.table) ? args.table : "MYTABLE";
         const columns = ((_a = args === null || args === void 0 ? void 0 : args.columns) === null || _a === void 0 ? void 0 : _a.length) ? SqlAbstract.whereColumns(args.columns, table) : "*";
         const where = ((_b = args === null || args === void 0 ? void 0 : args.where) === null || _b === void 0 ? void 0 : _b.length) === 3 ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${SqlAbstract.whereThirdArg(args.where.shift())}` : "";
@@ -55,6 +55,9 @@ class SqlAbstract {
         }
         if ((args === null || args === void 0 ? void 0 : args.statementType) == "delete") {
             return `DELETE FROM ${table}${where}`;
+        }
+        if ((args === null || args === void 0 ? void 0 : args.statementType) == "create table") {
+            return `CREATE TABLE ${table} (${(_f = args.createColumns) === null || _f === void 0 ? void 0 : _f.map((element) => element.join(" ")).join(", ")})`;
         }
         return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
     }

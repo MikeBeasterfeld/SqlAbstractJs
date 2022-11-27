@@ -65,13 +65,18 @@ export class SqlAbstract {
       return `DELETE FROM ${table}${where}`;
     }
 
+    if (args?.statementType == "create table") {
+      return `CREATE TABLE ${table} (${args.createColumns?.map((element) => element.join(" ")).join(", ")})`;
+    }
+
     return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
   }
 }
 
 type GenerateSQLArgs = {
-  statementType?: "select" | "insert" | "update" | "delete";
+  statementType?: "select" | "insert" | "update" | "delete" | "create table";
   columns?: string[];
+  createColumns?: string[][];
   values?: string[];
   table?: string;
   where?: (string | { col: string })[];

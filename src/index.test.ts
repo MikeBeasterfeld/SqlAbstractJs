@@ -106,3 +106,18 @@ describe("generate delete SQL", () => {
     ).toEqual("DELETE FROM MYTABLE WHERE foo > \"bar\"");
   });
 });
+
+describe("generate table creation SQL", () => {
+  const sqlabstract = new SqlAbstract();
+  it("should crete a create table statement", () => {
+    expect(
+      sqlabstract.generateSQL({
+        statementType: "create table",
+        table: "test_table",
+        createColumns: [
+          ["note", "TEXT"]
+        ]
+      })
+    ).toEqual("CREATE TABLE test_table (note TEXT)");
+  });
+});

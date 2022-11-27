@@ -5,9 +5,10 @@ export declare class SqlAbstract {
     static whereColumns(columns: string[] | undefined, table: string): string;
     generateSQL(args?: GenerateSQLArgs): string;
 }
-declare type GenerateSQLArgs = {
-    statementType?: "select" | "insert" | "update" | "delete";
+type GenerateSQLArgs = {
+    statementType?: "select" | "insert" | "update" | "delete" | "create table";
     columns?: string[];
+    createColumns?: string[][];
     values?: string[];
     table?: string;
     where?: (string | {
