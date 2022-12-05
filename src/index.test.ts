@@ -17,7 +17,7 @@ describe("generate select SQL", () => {
 
   it("should create a select statment with a where clause", () => {
     expect(select({ table: "MYTABLE", where: ["foo", ">", "bar"] })).toEqual(
-      'SELECT * FROM MYTABLE WHERE foo > "bar"'
+      "SELECT * FROM MYTABLE WHERE foo > \"bar\""
     );
   });
 
