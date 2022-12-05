@@ -22,13 +22,30 @@ function selectColumns(columns: string[] | undefined, table: string): string {
   return "*";
 }
 
+type SelectArgs = {
+  table: string;
+  columns?: string[];
+  where?: (string | { col: string })[];
+  orderBy?: string[];
+  join?: {
+    type: "inner" | "outer" | "cross";
+    table: string;
+    column: string;
+    baseTableColumn: string;
+  }[];
+};
+
 export function select(args: SelectArgs): string {
   const columns = selectColumns(args.columns, args.table);
 
-  const join = args?.join
-    ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${
-        args.table
-      }.${args.join.baseTableColumn} = ${args.join.table}.${args.join.column}`
+  const joins = args?.join
+    ? args?.join?.reduce((prev, tableJoin) => {
+        return `${prev} ${tableJoin.type.toUpperCase()} JOIN ${
+          tableJoin.table
+        } ON ${args.table}.${tableJoin.baseTableColumn} = ${tableJoin.table}.${
+          tableJoin.column
+        }`;
+      }, "")
     : "";
 
   const where =
@@ -42,21 +59,8 @@ export function select(args: SelectArgs): string {
     ? " ORDER BY " + args.orderBy.join(" ")
     : "";
 
-  return `SELECT ${columns} FROM ${args.table}${join}${where}${orderBy}`;
+  return `SELECT ${columns} FROM ${args.table}${joins}${where}${orderBy}`;
 }
-
-type SelectArgs = {
-  table: string;
-  columns?: string[];
-  where?: (string | { col: string })[];
-  orderBy?: string[];
-  join?: {
-    type: "inner";
-    table: string;
-    column: string;
-    baseTableColumn: string;
-  };
-};
 
 export function generateSQL(args: GenerateSQLArgs): string {
   const table = args?.table ? args.table : "MYTABLE";

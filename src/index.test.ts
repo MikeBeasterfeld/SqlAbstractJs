@@ -17,7 +17,7 @@ describe("generate select SQL", () => {
 
   it("should create a select statment with a where clause", () => {
     expect(select({ table: "MYTABLE", where: ["foo", ">", "bar"] })).toEqual(
-      "SELECT * FROM MYTABLE WHERE foo > \"bar\""
+      'SELECT * FROM MYTABLE WHERE foo > "bar"'
     );
   });
 
@@ -37,15 +37,41 @@ describe("generate select SQL", () => {
     expect(
       select({
         table: "MYTABLE",
-        join: {
-          type: "inner",
-          table: "MYTABLE2",
-          column: "mytable_id",
-          baseTableColumn: "id",
-        },
+        join: [
+          {
+            type: "inner",
+            table: "MYTABLE2",
+            column: "mytable_id",
+            baseTableColumn: "id",
+          },
+        ],
       })
     ).toEqual(
       "SELECT * FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id"
+    );
+  });
+
+  it("should create a select with multiple inner joins", () => {
+    expect(
+      select({
+        table: "MYTABLE",
+        join: [
+          {
+            type: "inner",
+            table: "MYTABLE2",
+            column: "mytable_id",
+            baseTableColumn: "id",
+          },
+          {
+            type: "inner",
+            table: "MYTABLE3",
+            column: "mytable_id",
+            baseTableColumn: "id",
+          },
+        ],
+      })
+    ).toEqual(
+      "SELECT * FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id INNER JOIN MYTABLE3 ON MYTABLE.id = MYTABLE3.mytable_id"
     );
   });
 
@@ -54,12 +80,14 @@ describe("generate select SQL", () => {
       select({
         table: "MYTABLE",
         columns: ["foo", "MYTABLE2.bar"],
-        join: {
-          type: "inner",
-          table: "MYTABLE2",
-          column: "mytable_id",
-          baseTableColumn: "id",
-        },
+        join: [
+          {
+            type: "inner",
+            table: "MYTABLE2",
+            column: "mytable_id",
+            baseTableColumn: "id",
+          },
+        ],
       })
     ).toEqual(
       "SELECT MYTABLE.foo, MYTABLE2.bar FROM MYTABLE INNER JOIN MYTABLE2 ON MYTABLE.id = MYTABLE2.mytable_id"
