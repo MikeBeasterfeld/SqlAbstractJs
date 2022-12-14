@@ -21,18 +21,20 @@ function selectColumns(columns, table) {
     return "*";
 }
 function select(args) {
-    var _a, _b;
+    var _a, _b, _c;
     const columns = selectColumns(args.columns, args.table);
-    const join = (args === null || args === void 0 ? void 0 : args.join)
-        ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${args.table}.${args.join.baseTableColumn} = ${args.join.table}.${args.join.column}`
+    const joins = (args === null || args === void 0 ? void 0 : args.join)
+        ? (_a = args === null || args === void 0 ? void 0 : args.join) === null || _a === void 0 ? void 0 : _a.reduce((prev, tableJoin) => {
+            return `${prev} ${tableJoin.type.toUpperCase()} JOIN ${tableJoin.table} ON ${args.table}.${tableJoin.baseTableColumn} = ${tableJoin.table}.${tableJoin.column}`;
+        }, "")
         : "";
-    const where = ((_a = args === null || args === void 0 ? void 0 : args.where) === null || _a === void 0 ? void 0 : _a.length) === 3
+    const where = ((_b = args === null || args === void 0 ? void 0 : args.where) === null || _b === void 0 ? void 0 : _b.length) === 3
         ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(args.where.shift())}`
         : "";
-    const orderBy = ((_b = args === null || args === void 0 ? void 0 : args.orderBy) === null || _b === void 0 ? void 0 : _b.length)
+    const orderBy = ((_c = args === null || args === void 0 ? void 0 : args.orderBy) === null || _c === void 0 ? void 0 : _c.length)
         ? " ORDER BY " + args.orderBy.join(" ")
         : "";
-    return `SELECT ${columns} FROM ${args.table}${join}${where}${orderBy}`;
+    return `SELECT ${columns} FROM ${args.table}${joins}${where}${orderBy}`;
 }
 exports.select = select;
 function generateSQL(args) {

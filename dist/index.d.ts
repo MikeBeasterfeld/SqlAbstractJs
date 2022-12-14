@@ -1,4 +1,3 @@
-export declare function select(args: SelectArgs): string;
 type SelectArgs = {
     table: string;
     columns?: string[];
@@ -7,12 +6,13 @@ type SelectArgs = {
     })[];
     orderBy?: string[];
     join?: {
-        type: "inner";
+        type: "inner" | "outer" | "cross";
         table: string;
         column: string;
         baseTableColumn: string;
-    };
+    }[];
 };
+export declare function select(args: SelectArgs): string;
 export declare function generateSQL(args: GenerateSQLArgs): string;
 type GenerateSQLArgs = {
     statementType?: "insert" | "update" | "delete" | "create table";
