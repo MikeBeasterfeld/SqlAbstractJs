@@ -16,7 +16,7 @@ type WhereExpression =
   | string
   | {
       expression: string;
-      as: string; // may need to be improved
+      as: string;
     };
 
 type JoinConstraint = {
@@ -77,18 +77,59 @@ function isTable(expression: TableOrSubqueryOrJoinClause): expression is Table {
   );
 }
 
-type TableOrSubqueryOrJoinClause = JoinOperator | Table | JoinConstraint;
+type Subquery = {
+  selectStatement: SelectCore;
+  as: string;
+};
+
+function isSubquery(
+  expression: TableOrSubqueryOrJoinClause
+): expression is Subquery {
+  return (
+    (expression as Subquery).selectStatement !== undefined &&
+    (expression as Subquery).as !== undefined
+  );
+}
+type TableOrSubqueryOrJoinClause =
+  | JoinOperator
+  | Table
+  | Subquery
+  | JoinConstraint;
+
+type Select = {
+  compoundOperator: "UNION" | "UNION ALL" | "INTERSECT" | "EXCEPT" | undefined;
+  selectCores: SelectCore[];
+  orderBy: Expression;
+  limit: number;
+  offset: number;
+};
 
 type SelectCore = {
   modifier: "DISTINCT" | "ALL";
   resultColumns: ResultColumn[];
-  from: Table[];
+  from: TableOrSubqueryOrJoinClause[];
   where: WhereExpression[];
   groupBy?: Expression;
   having?: Expression;
+  window?: Expression;
+  values?: Expression;
 };
 
-function select(select: SelectCore) {
+function select(select: Select): string {
+  return (
+    select.selectCores
+      .map((selectCore) => {
+        return selectStatement(selectCore);
+      })
+      .join(" " + select.compoundOperator + " ") +
+    " LIMIT " +
+    select.limit +
+    " OFFSET " +
+    select.offset
+  );
+}
+
+function selectStatement(select: SelectCore) {
   const selectStatement = ["SELECT"];
 
   selectStatement.push(selectResultColumns(select.resultColumns));
@@ -117,6 +158,9 @@ function selectTables(fromTables: TableOrSubqueryOrJoinClause[]): string {
         if (isJoinOperator(fromTable)) {
           throw new Error("JoinOperator unimplemented");
         }
+        if (isSubquery(fromTable)) {
+          throw new Error("Subquery unimplemented");
+        }
         if (isJoinConstraint(fromTable)) {
           throw new Error("JoinConstraint unimplemented");
         }
@@ -141,25 +185,88 @@ function selectWhere(where: WhereExpression[]): string {
 }
 
 describe("what is SQL", () => {
-  it("SELECT", () => {
-    const object: SelectCore = {
-      modifier: "DISTINCT",
-      resultColumns: [
-        { expression: "id", as: "id" },
-        { expression: "name", as: "name" },
-        { expression: "email", as: "email" },
-      ],
-      from: [
+  it("Select without compound", () => {
+    const object: Select = {
+      compoundOperator: undefined,
+      limit: 1,
+      offset: 1,
+      orderBy: "id",
+      selectCores: [
         {
-          name: "Users",
-          as: "Users",
+          modifier: "DISTINCT",
+          resultColumns: [
+            { expression: "id", as: "id" },
+            { expression: "name", as: "name" },
+            { expression: "email", as: "email" },
+          ],
+          from: [
+            {
+              name: "Users",
+              as: "Users",
+            },
+          ],
+          where: ["1=1"],
         },
       ],
-      where: ["1=1"],
     };
 
     expect(select(object)).toEqual(
-      "SELECT id AS id, name AS name, email AS email FROM Users AS Users WHERE 1=1"
+      "SELECT id AS id, name AS name, email AS email " +
+        "FROM Users AS Users " +
+        "WHERE 1=1 " +
+        "LIMIT 1 OFFSET 1"
+    );
+  });
+
+  it("Select with Union", () => {
+    const object: Select = {
+      compoundOperator: "UNION",
+      limit: 1,
+      offset: 1,
+      orderBy: "id",
+      selectCores: [
+        {
+          modifier: "DISTINCT",
+          resultColumns: [
+            { expression: "id", as: "id" },
+            { expression: "name", as: "name" },
+            { expression: "email", as: "email" },
+          ],
+          from: [
+            {
+              name: "Users",
+              as: "Users",
+            },
+          ],
+          where: ["1=1"],
+        },
+        {
+          modifier: "DISTINCT",
+          resultColumns: [
+            { expression: "id", as: "id" },
+            { expression: "name", as: "name" },
+            { expression: "email", as: "email" },
+          ],
+          from: [
+            {
+              name: "Users",
+              as: "Users",
+            },
+          ],
+          where: ["1=1"],
+        },
+      ],
+    };
+
+    expect(select(object)).toEqual(
+      "SELECT id AS id, name AS name, email AS email " +
+        "FROM Users AS Users " +
+        "WHERE 1=1 " +
+        "UNION " +
+        "SELECT id AS id, name AS name, email AS email " +
+        "FROM Users AS Users " +
+        "WHERE 1=1 " +
+        "LIMIT 1 OFFSET 1"
     );
   });
 });
