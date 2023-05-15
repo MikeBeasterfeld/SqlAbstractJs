@@ -1,138 +1,80 @@
-function whereThirdArg(arg: string | { col: string } | undefined): string {
-  if (typeof arg === "object") {
-    return arg.col;
-  }
+import {
+  ResultColumn,
+  Select,
+  SelectCore,
+  TableOrSelectOrJoinClause,
+  WhereExpression,
+  isJoinConstraint,
+  isJoinOperator,
+  isSelect,
+  isTable,
+} from "./types";
 
-  return `"${arg}"`;
-}
-
-function selectColumns(columns: string[] | undefined, table: string): string {
-  if (columns) {
-    return columns
-      .map((col) => {
-        if (col.split(".").length < 2) {
-          return `${table}.${col}`;
-        }
-
-        return col;
+export function select(select: Select): string {
+  return (
+    select.selectCores
+      .map((selectCore) => {
+        return selectStatement(selectCore);
       })
-      .join(", ");
-  }
-
-  return "*";
+      .join(" " + select.compoundOperator + " ") +
+    " LIMIT " +
+    select.limit +
+    " OFFSET " +
+    select.offset
+  );
 }
 
-type SelectArgs = {
-  table: string;
-  columns?: string[];
-  where?: (string | { col: string })[];
-  orderBy?: string[];
-  join?: {
-    type: "inner" | "outer" | "cross";
-    table: string;
-    column: string;
-    baseTableColumn: string;
-  }[];
-};
+function selectStatement(select: SelectCore) {
+  const selectStatement = ["SELECT"];
 
-export function select(args: SelectArgs): string {
-  const columns = selectColumns(args.columns, args.table);
+  selectStatement.push(selectResultColumns(select.resultColumns));
+  selectStatement.push(selectTables(select.from));
+  selectStatement.push(selectWhere(select.where));
 
-  const joins = args?.join
-    ? args?.join?.reduce((prev, tableJoin) => {
-        return `${prev} ${tableJoin.type.toUpperCase()} JOIN ${
-          tableJoin.table
-        } ON ${args.table}.${tableJoin.baseTableColumn} = ${tableJoin.table}.${
-          tableJoin.column
-        }`;
-      }, "")
-    : "";
-
-  const where =
-    args?.where?.length === 3
-      ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(
-          args.where.shift()
-        )}`
-      : "";
-
-  const orderBy = args?.orderBy?.length
-    ? " ORDER BY " + args.orderBy.join(" ")
-    : "";
-
-  return `SELECT ${columns} FROM ${args.table}${joins}${where}${orderBy}`;
+  return selectStatement.join(" ");
 }
 
-export function generateSQL(args: GenerateSQLArgs): string {
-  const table = args?.table ? args.table : "MYTABLE";
-  const columns = args?.columns?.length
-    ? selectColumns(args.columns, table)
-    : "*";
-  const where =
-    args?.where?.length === 3
-      ? ` WHERE ${args.where.shift()} ${args.where.shift()} ${whereThirdArg(
-          args.where.shift()
-        )}`
-      : "";
-  const orderBy = args?.orderBy?.length
-    ? " ORDER BY " + args.orderBy.join(" ")
-    : "";
-  const values = args?.values?.length
-    ? args.values.map((value) => `'${value}'`).join(",")
-    : "";
-  const setValues = args?.columns?.length
-    ? args.columns.map((column, i) => {
-        if (args?.values && args.values[i]) {
-          console.log("column", column);
-          console.log("value", args.values[i]);
-          return [column, args.values[i]];
+function selectResultColumns(resultColumns: ResultColumn[]): string {
+  return resultColumns
+    .map((resultColumn) => {
+      return `${resultColumn.expression} AS ${resultColumn.as}`;
+    })
+    .join(", ");
+}
+
+function selectTables(fromTables: TableOrSelectOrJoinClause[]): string {
+  return (
+    "FROM " +
+    fromTables
+      .map((fromTable) => {
+        if (isTable(fromTable)) {
+          return `${fromTable.name} AS ${fromTable.as}`;
+        }
+        if (isJoinOperator(fromTable)) {
+          throw new Error("JoinOperator unimplemented");
+        }
+        if (isSelect(fromTable)) {
+          return "(" + select(fromTable) + ")";
+        }
+        if (isJoinConstraint(fromTable)) {
+          throw new Error("JoinConstraint unimplemented");
         }
       })
-    : [];
-  const join = args?.join
-    ? ` ${args.join.type.toUpperCase()} JOIN ${args.join.table} ON ${table}.${
-        args.join.baseTableColumn
-      } = ${args.join.table}.${args.join.column}`
-    : "";
-
-  if (args?.statementType == "insert") {
-    return `INSERT INTO ${table} (${columns}) VALUES (${values})`;
-  }
-
-  if (args?.statementType == "update") {
-    const sets = setValues.map((set) => {
-      if (set) {
-        return `${set[0]} = '${set[1]}'`;
-      }
-    });
-
-    return `UPDATE ${table} SET ${sets.join(",")}${where}`;
-  }
-
-  if (args?.statementType == "delete") {
-    return `DELETE FROM ${table}${where}`;
-  }
-
-  if (args?.statementType == "create table") {
-    return `CREATE TABLE ${table} (${args.createColumns
-      ?.map((element) => element.join(" "))
-      .join(", ")})`;
-  }
-
-  return `SELECT ${columns} FROM ${table}${join}${where}${orderBy}`;
+      .join(", ")
+  );
 }
 
-type GenerateSQLArgs = {
-  statementType?: "insert" | "update" | "delete" | "create table";
-  columns?: string[];
-  createColumns?: string[][];
-  values?: string[];
-  table?: string;
-  where?: (string | { col: string })[];
-  orderBy?: string[];
-  join?: {
-    type: "inner";
-    table: string;
-    column: string;
-    baseTableColumn: string;
-  };
-};
+function selectWhere(where: WhereExpression[]): string {
+  if (where.length === 0) {
+    return "";
+  }
+
+  return (
+    "WHERE " +
+    where
+      .map((whereClause) => {
+        return whereClause;
+      })
+      .join(" AND ")
+  );
+}
